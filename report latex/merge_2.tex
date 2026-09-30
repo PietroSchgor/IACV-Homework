@@ -1,0 +1,545 @@
+\documentclass[a4paper,11pt]{article}
+
+% --- PACKAGES ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{bm}
+\usepackage{biblatex}
+
+% --- SETUP MARGINS ---
+\geometry{
+    left=25mm,
+    right=25mm,
+    top=25mm,
+    bottom=25mm
+}
+
+% --- SETUP LISTINGS ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    language=Matlab
+}
+\lstset{style=mystyle}
+
+% --- CUSTOM COMMANDS FOR NOTATION ---
+\newcommand{\matr}[1]{\bm{#1}}     % Bold Matrices
+\newcommand{\vect}[1]{\mathbf{#1}}  % Bold Vectors/Points
+\newcommand{\lineinf}{\ell_\infty}  % Line at infinity
+
+% --- TITLE ---
+\title{
+    \textbf{Image Analysis and Computer Vision} \\
+    \large Homework Report
+}
+\author{Pietro Filippo Schgor \\ Person code: 10710527}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% --- SECTION 1 ---
+\section{Feature Extraction and Vanishing Geometry}
+
+\paragraph{Feature Extraction}
+Consider the image San Maurizio.png. Using feature extraction techniques (including those already implemented in Matlab) plus possible manual intervention, extract the images of useful lines and edgepoints on the curved arcs. All the features have been manually extracted.
+
+\begin{figure}[h]
+    \centering
+    % --- First image (left) ---
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/given segments.png}
+        \caption{}
+        \label{fig:img1}
+    \end{subfigure}
+    \hfill % Pushes images to opposite sides
+    % --- Second image (right) ---
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/extracted segments.png}
+        \caption{ }
+        \label{fig:img2}
+    \end{subfigure}
+    
+    \caption{Given and extracted segments}
+    \label{fig:due_immagini}
+\end{figure}
+
+\paragraph{Theory: Vanishing Line and Axis}
+From the above mentioned sets of lines, we find the vanishing line $\ell'_{\infty}$ of any plane perpendicular to the cylinder Axis. The vanishing line (horizon) is the image of the line at infinity $\lineinf$, representing the set of points at infinity. To identify the vanishing line of the plane perpendicular to the cylinder axis, we compute the vanishing points derived from sets of parallel lines in both the $X$ and $Y$ directions \ref{fig:due_immagini}:
+
+\begin{itemize}
+    \item $\vect{V}_x$ (Vanishing Point $X$): The intersection of the set of lines $\mathcal{L} = \{l_1, l_2, l_3\}$ parallel to the $X$-axis in 3D space.
+    \item $\vect{V}_y$ (Vanishing Point $Y$): The intersection of the set of lines $\mathcal{M} = \{m_1, m_2, m_3\}$ parallel to the $Y$-axis in 3D space.
+\end{itemize}
+
+The line connecting $\vect{V}_x$ and $\vect{V}_y$ defines the vanishing line of the horizontal plane, denoted as $\ell'_\infty$:
+\begin{equation}
+    \ell'_\infty = \vect{V}_x \times \vect{V}_y = 
+    \begin{bmatrix}
+    a \\
+    b \\
+    c
+    \end{bmatrix}
+\end{equation}
+
+Next, we find the vanishing point in the direction of the cylinder axis. As before, we compute the vanishing point in the direction of the cylinder axis as the intersection of a pair of lines parallel to the aforementioned axis. Let $\vect{V}_z$ be the Vanishing Point $Z$: it is the intersection of the set of lines $\mathcal{W} = \{w_1, w_2, w_3\}$ parallel to the $Z$-axis in 3D space.
+
+\paragraph{Matlab Results}
+The set of lines $\mathcal{L} = \{l_1, l_2, l_3\}$, $\mathcal{M} = \{m_1, m_2, m_3\}$, $\mathcal{W} = \{w_1, w_2, w_3\}$ have been extracted selecting a pair of points for every line and computing the cross product. The vanishing point $\vect{V}_z$ is computed as the cross product of the pair of more distant lines in $\mathcal{W}$ to minimize the risk of selecting lines apparently parallel.
+\begin{equation}
+    \vect{V}_z = 
+    \begin{bmatrix}
+       6198.5 \\
+    2474.4 \\
+    1.000 
+    \end{bmatrix}
+\end{equation}
+The vanishing points $\vect{V}_x$ , $\vect{V}_y$ have been computed in the same way; the resulting vanishing line is:
+\begin{equation}
+    \ell'_\infty = \vect{V}_x \times \vect{V}_y = 
+    \begin{bmatrix}
+        -0.0011 \\
+        -0.0003 \\
+        1.0000 
+    \end{bmatrix}
+\end{equation}
+
+% --- SECTION 2 ---
+\section{Rectification (Affine and Metric)}
+
+\paragraph{Theory: Stratified Rectification}
+Using both the results of the previous points and the image of some of the diagonal arcs, we find a (Euclidean) rectification mapping $\matr{H}_R$ for one of the vertical planes perpendicular to the cylinder axis. I chose the \textit{Stratified Rectification} method starting from the circular constraint, as there are not at least two non-parallel independent pairs of orthogonal lines available.
+
+\begin{enumerate}
+    \item \textbf{First step: Affine reconstruction (from Projective to Affine)} \\    We construct the affine mapping $\matr{H}_A$  that maps the imaged vanishing line $\ell'_\infty$ to the canonical line at infinity $\mathbf{l}_\infty = (0,0,1)^\top$:
+    \begin{equation}
+        \matr{H}_A = 
+        \begin{bmatrix}
+            1 & 0 & 0 \\
+            0 & 1 & 0 \\
+            a & b & c
+        \end{bmatrix}, \matr{H}_A^{-T}\ell'_{\infty} = \mathbf{l}_\infty
+    \end{equation}
+    This transformation produces an image where the sets $\mathcal{L}$ and $\mathcal{M}$ become parallel. However, the image remains affinely distorted (angles are not preserved) \ref{fig:affine}.
+     \begin{figure}[h]
+    \centering
+    % --- First image (left) ---
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/affine rectification.png}
+        \caption{Affine Rectification}
+        \label{fig:affine}
+    \end{subfigure}
+    \hfill % Pushes images to opposite sides
+    % --- Second image (right) ---
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/5 midpoints.png}
+        \caption{Midpoints }
+        \label{Midpoints}
+    \end{subfigure}
+    
+    \caption{ }
+    \label{Q3}
+\end{figure}
+    
+    \item \textbf{Second step: Shape reconstruction (from Affine to Metric)} \\
+    We leverage the knowledge of the vault's geometry: the intersection of the cylindrical vault with a plane $X-Y$ perpendicular to the axis is a semicircle. We determine a second affine transformation $\matr{H}_B$ to rescale the rectified image, ensuring the axes of the circle are perpendicular and of equal length.
+
+    \textbf{a) Feature Extraction (Harmonic Conjugates):}
+Due to the symmetry of the diagonal arches, the midpoint of each pair of symmetric endpoints
+$(a_i, b_i)$ \ref{Midpoints} lies on a plane perpendicular to the cylinder axis.
+In the image, the midpoint $m_i$ is obtained as the harmonic conjugate of the vanishing point
+$\vect{V}_z$ with respect to the points $a_i$ and $b_i$, satisfying the cross-ratio:
+\[
+(a_i, b_i; m_i, V_z) = -1
+\]
+This construction is invariant under projective transformations and allows the recovery of
+the midpoints up to scale.
+
+    
+    \textbf{b) Conic Fitting:}
+    We fit a conic section to these midpoints using the Direct Linear Transformation (DLT) method. The coefficient vector $\vect{c}$ minimizes $\|\matr{D}\vect{c}\|$ (via SVD) for the conic equation:
+    \begin{equation}
+        Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
+    \end{equation}
+    Let $\matr{Q}$ be the matrix of the affine-rectified conic.
+    
+    \textbf{c) Metric Transformation Construction:}
+    We extract the geometric properties of the ellipse from $\matr{Q}$: orientation $\alpha$, semi-major axis $a$, and semi-minor axis $b$. To restore circularity, we decompose the transformation $\matr{G}$ into rotation and isotropic scaling:
+    
+    Let $\matr{R}_{\alpha}$ be the rotation matrix and $\matr{S}$ the scaling matrix (with $\sigma = a/b$):
+    \begin{equation}
+        \matr{R}_{\alpha} = \begin{pmatrix} 
+        \cos\alpha & -\sin\alpha \\ 
+        \sin\alpha & \cos\alpha 
+        \end{pmatrix}, \quad
+        \matr{S} = \begin{pmatrix} 
+        1 & 0 \\ 
+        0 & \frac{a}{b} 
+        \end{pmatrix}
+    \end{equation}
+    
+    The local affine deformation $\matr{G}$ is:
+    \begin{equation}
+        \matr{G} = \matr{R}_{\alpha} \cdot \matr{S} \cdot \matr{R}_{\alpha}^T
+    \end{equation}
+    
+    Embedding this into a homography $\matr{H}_B$:
+    \begin{equation}
+        \matr{H}_B = \begin{bmatrix} 
+        G_{11} & G_{12} & 0 \\ 
+        G_{21} & G_{22} & 0 \\ 
+        0 & 0 & 1 
+        \end{bmatrix} 
+    \end{equation}
+    
+    The final Metric Rectification Homography $\matr{H}_R$ is:
+    \begin{equation}
+        \matr{H}_R = \matr{H}_B \cdot \matr{H}_A
+    \end{equation}
+\end{enumerate}
+
+\paragraph{Matlab Results}
+We compute the affine mapping $\matr{H}_A$  that maps the imaged vanishing line $\ell'_\infty$ to the canonical line at infinity $\mathbf{l}_\infty = (0,0,1)^\top$:
+    \[
+        \matr{H}_A = 
+        \begin{bmatrix}
+            1 & 0 & 0 \\
+            0 & 1 & 0 \\
+            -0.0011 & -0.0003 & 1.0000
+        \end{bmatrix}
+    \]
+    To compute $\matr{H}_B$ we needed to extract the midpoints, way more than just 5 to have a more stable result \ref{conic}. The conic $\mathbf{C}$ fitted on these points is:
+    \[        
+        \mathbf{C} =       
+            \begin{bmatrix}
+            1.2647 \times 10^{-7} & 4.3709 \times 10^{-8} & -3.5206 \times 10^{-4} \\
+            4.3709 \times 10^{-8} & 1.0981 \times 10^{-7} & -2.0902 \times 10^{-4} \\
+            -3.5206 \times 10^{-4} & -2.0902 \times 10^{-4} & 1.0000
+            \end{bmatrix}
+    \]
+      \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.45\textwidth]{figures/conic fitting original image.png}
+        \caption{}
+        \label{conic}
+    \end{figure}
+
+    
+    From this result, we can compute $\matr{H}_B$ circularizing the conic \cite{magri2025iacv}:
+    \[
+        \mathbf{H_B} = 
+        \begin{bmatrix}
+         0.9916 & 0.0760 & 0 \\
+         0.0760 & 0.3118 & 0 \\
+         0      & 0      & 1
+        \end{bmatrix}
+    \]
+    The final metric rectification is:
+    \[
+        H_R = H_B \cdot H_A = 
+        \begin{bmatrix}
+         -0.9916 & -0.0760 & 0 \\
+         -0.0760 & -0.3118 & 0 \\
+         -0.0012 & -0.0003 & 1
+        \end{bmatrix}
+    \]
+We can see that in the metric rectified image the angles are preserved \ref{fig:metric}.
+ \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.45\textwidth]{figures/metric rectification.png}
+        \caption{Metric Rectification}
+        \label{fig:metric}
+    \end{figure}
+
+% --- SECTION 3 ---
+\section{Camera Calibration}
+
+\paragraph{Theory: The Calibration Matrix}
+From the results of the previous points, we compute the calibration matrix $\mathbf{K}$ of the camera. The internal calibration of the camera is encapsulated in the matrix $\matr{K}$. To retrieve it, we estimate the \textit{Image of the Absolute Conic} (IAC), denoted as $\matr{\omega}$. The relationship is given by:
+\begin{equation}
+    \matr{\omega} = (\matr{K}\matr{K}^T)^{-1}
+\end{equation}
+
+We proceed with the assumption of \textbf{zero skew} ($s=0$), which implies that the camera sensor axes are orthogonal. The matrix $\matr{\omega}$ takes the following form:
+\begin{equation}
+    \matr{\omega} = 
+    \begin{bmatrix}
+    \omega_{11} & 0 & \omega_{13} \\
+    0 & \omega_{22} & \omega_{23} \\
+    \omega_{13} & \omega_{23} & \omega_{33}
+    \end{bmatrix}
+\end{equation}
+
+To solve for the unknown entries of $\matr{\omega}$, we construct a linear system $\matr{A}\vect{w} = \vect{0}$ based on the geometric constraints of the scene:
+
+\begin{enumerate}
+    \item \textbf{Constraints from Rectifying Homography (Zhang's Constraints):} \\
+    Let $\matr{H} = [\vect{h}_1, \vect{h}_2, \vect{h}_3]$ be the inverse of the rectification homography ($\matr{H} = \matr{H}_R^{-1}$). Since the rectification maps the image to a metric plane (where basis vectors are orthogonal and of equal length), the columns $\vect{h}_1$ and $\vect{h}_2$ must satisfy:
+    \begin{align}
+        \vect{h}_1^T \matr{\omega} \vect{h}_2 &= 0 \quad (\text{Orthogonality}) \\
+        \vect{h}_1^T \matr{\omega} \vect{h}_1 - \vect{h}_2^T \matr{\omega} \vect{h}_2 &= 0 \quad (\text{Equal Magnitude})
+    \end{align}
+    The second constraint implicitly relates the scaling factors along the axes, allowing us to recover the aspect ratio ($f_x/f_y$) rather than assuming it.
+
+    \item \textbf{Constraints from Vanishing Points (Pole-Polar relationship):} \\
+    The vertical vanishing point $\vect{V}_z$ corresponds to the direction normal to the ground plane. In projective geometry, the vanishing point of the normal direction is the \textit{pole} of the vanishing line of the plane ($\vect{\ell}'_\infty$) with respect to the IAC:
+    \begin{equation}
+        \vect{\ell}'_\infty \propto \matr{\omega} \vect{V}_z
+    \end{equation}
+    This provides additional linear equations (via cross-product $(\matr{\omega} \vect{V}_z) \times \vect{\ell}'_\infty = \vect{0}$) to constrain the solution.
+\end{enumerate}
+
+\textbf{Solution and Extraction of K:} \\
+The system is solved via Singular Value Decomposition (SVD) to find the parameter vector $\vect{w}$. Once $\matr{\omega}$ is reconstructed, the calibration matrix $\matr{K}$ is obtained via the inverse Cholesky decomposition ($\matr{\omega} = \matr{R}^T \matr{R} \implies \matr{K} = \matr{R}^{-1}$).
+Finally, verifying the ratio $K_{11}/K_{22}$ allows us to discover that the pixels are indeed approximately square ($f_x \approx f_y$), validating the quality of the calibration.
+
+\paragraph{Matlab Results}
+The image of the absolute conic $\omega$:
+     \[
+       \omega  =
+\begin{bmatrix}
+1.2540 \times 10^{-7} & 0 & -1.8899 \times 10^{-4} \\
+0 & 1.2540 \times 10^{-7} & -1.3506 \times 10^{-4} \\
+-1.8899 \times 10^{-4} & -1.3506 \times 10^{-4} & 1.0000
+\end{bmatrix}
+    \]
+    as we expected, $\omega$ is symmetric and positive definite, therefore we can apply the Cholesky decomposition to its inverse to compute $\mathbf{K}$:
+    \[
+    K =
+        \begin{bmatrix}
+        2131.4695 & 0 & 1507.0468 \\
+        0 & 2131.4695 & 1076.9679 \\
+        0 & 0 & 1
+        \end{bmatrix}
+        \]
+    We observe that $f_x = f_y = 2131.4695$ therefore the pixel ratio (1:1) is preserved. We  also observe that the Principal point $(u_0 = 1507.0468, v_0 = 1076.9679 )$ is really close to the center of the image \ref{fig:principal}.
+    
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=0.45\textwidth]{figures/Principal Point.png}
+            \caption{}
+            \label{fig:principal}
+        \end{figure}
+
+% --- SECTION 4 ---
+\section{3D Reconstruction}
+
+\paragraph{Theory: Triangulation}
+Using the results of the previous points, we choose one of the diagonal arcs and compute the 3D coordinates of a dozen of its points (e.g., w.r.t. a camera reference). The 3D reconstruction is performed by exploiting the geometric relationship between two parallel diagonal arcs (ribs), denoted as arc $\mathcal{A}$ and arc $\mathcal{B}$, and the vanishing point of the cylinder axis $\vect{v}_z$.
+Assuming a known Euclidean distance $d$ between the two parallel arcs (e.g., the distance between adjacent bays), we can triangulate the depth of corresponding points using the Law of Sines.
+
+The procedure is as follows:
+\begin{enumerate}
+    \item \textbf{Back-projection:} Let $\vect{u}_A$ and $\vect{u}_B$ be the projections of corresponding points on the two arcs. We back-project them into unit viewing rays in the camera reference frame:
+    \begin{equation}
+        \vect{d}_A = \frac{\matr{K}^{-1}\vect{u}_A}{\|\matr{K}^{-1}\vect{u}_A\|}, \quad \vect{d}_B = \frac{\matr{K}^{-1}\vect{u}_B}{\|\matr{K}^{-1}\vect{u}_B\|}
+    \end{equation}
+    
+    \item \textbf{Axis Direction:} The 3D direction of the cylinder axis (and thus the direction connecting the two parallel arcs) is given by the back-projection of the vanishing point $\vect{v}_z$:
+    \begin{equation}
+        \vect{n} = \frac{\matr{K}^{-1}\vect{v}_z}{\|\matr{K}^{-1}\vect{v}_z\|}
+    \end{equation}
+    
+    \item \textbf{Triangulation (Law of Sines):} We solve the triangle formed by the camera center $O$ and the 3D points $A$ and $B$. We define the angles:
+    \begin{equation}
+        \theta = \arccos(\vect{d}_A \cdot \vect{d}_B), \quad \alpha = \arccos(\vect{d}_A \cdot \vect{n})
+    \end{equation}
+    The third angle is $\beta = \pi - (\theta + \alpha)$. Using the Law of Sines with the known baseline $d$:
+    \begin{equation}
+        \|A\| = d \cdot \frac{\sin(\beta)}{\sin(\theta)}, \quad \|B\| = d \cdot \frac{\sin(\alpha)}{\sin(\theta)}
+    \end{equation}
+    
+    \item \textbf{3D Coordinates:} The final coordinates are obtained by scaling the viewing rays:
+    \begin{equation}
+        \vect{A}_{3D} = \|A\| \cdot \vect{d}_A
+    \end{equation}
+\end{enumerate}
+
+\paragraph{Matlab Results}
+The 3D reconstruction of one of the diagonal arches was performerd by leveraging the known distance $d = 1$ between parallel diagonal arches. Twelve pairs of parallel points on respective parallel arches were extracted \ref{fig:parallel arches}. We can see the reconstruction of the 3D points of the arc composed by the set of points $\{a_i\}$ in the images at Q3 \ref{fig:griglia_quattro_img}. The 3D coordinates of the points are reported in the following table.
+    \begin{table}[h]
+    \centering
+    \caption{}
+    \label{tab:3d_points}
+    \begin{tabular}{c r r r} % c=center, r=right align (migliore per i numeri)
+        \hline
+        \textbf{Point} & \textbf{X} & \textbf{Y} & \textbf{Z} \\
+        \hline
+        1  & 0.0034 & 0.3357  & 3.6998 \\
+        2  & 0.0499 & 0.1367  & 3.8859 \\
+        3  & 0.1301 & -0.0126 & 3.9814 \\
+        4  & 0.2582 & -0.1645 & 4.0926 \\
+        5  & 0.3954 & -0.2958 & 4.1128 \\
+        6  & 0.5686 & -0.4506 & 4.1867 \\
+        7  & 0.7928 & -0.5800 & 4.2011 \\
+        8  & 1.0165 & -0.6938 & 4.1842 \\
+        9  & 1.2554 & -0.7891 & 4.1327 \\
+        10 & 1.5479 & -0.8806 & 4.0263 \\
+        11 & 1.8077 & -0.9435 & 3.9770 \\
+        12 & 2.0721 & -0.9676 & 3.8430 \\
+        \hline
+    \end{tabular}
+\end{table}
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=0.45\textwidth]{figures/parallel diagonal arches.png}
+            \caption{}
+            \label{fig:parallel arches}
+        \end{figure}
+
+\begin{figure}[h]
+            \centering
+            \includegraphics[width=0.45\textwidth]{figures/Selected Arc.png}
+            \caption{selected diagonal arch}
+            \label{fig: selected arch}
+        \end{figure}
+
+\begin{figure}[htbp]
+    \centering % Centra l'intera figura nella pagina
+
+    % --- RIGA 1 (TOP) ---
+    
+    % Immagine 1 (Top-Sinistra)
+    % [b] allinea le didascalie in basso. 0.45\textwidth occupa il 45% della larghezza del testo.
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+       
+        \includegraphics[width=\textwidth]{figures/3D Recon - Isometric View (Standard).png} 
+        \caption{Isometric View}
+        \label{fig:isometric}
+    \end{subfigure}
+    \hfill % \hfill spinge le due immagini ai bordi opposti, creando spazio in mezzo
+    % Immagine 2 (Top-Destra)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+     
+        \includegraphics[width=\textwidth]{figures/3D Recon - High Angle (Bird's Eye).png}
+        \caption{Bird's Eye View}
+        \label{fig:bird}
+    \end{subfigure}
+
+    % --- SPAZIO VERTICALE TRA LE RIGHE ---
+    \par\bigskip % Va a capo e aggiunge un po' di spazio verticale
+    % In alternativa usa: \vspace{1em} per uno spazio specifico
+
+    % --- RIGA 2 (BOTTOM) ---
+
+    % Immagine 3 (Bottom-Sinistra)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        % Sostituisci 'immagine3.png' con il nome del tuo file reale
+        \includegraphics[width=\textwidth]{figures/3D Recon - Low Angle (Worm's Eye).png}
+        \caption{Worw's Eye View}
+        \label{fig:worw}
+    \end{subfigure}
+    \hfill % Spazio orizzontale
+    % Immagine 4 (Bottom-Destra)
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        % Sostituisci 'immagine4.png' con il nome del tuo file reale
+        \includegraphics[width=\textwidth]{figures/3D Recon - Rear-Side View.png}
+        \caption{Rear-Side View}
+        \label{fig:rear}
+    \end{subfigure}
+
+    % --- DIDASCALIA PRINCIPALE ---
+    \caption{Views of the selected arc in 3D.}
+    \label{fig:griglia_quattro_img}
+\end{figure}
+
+
+% --- SECTION 5 ---
+\section{Cylinder Axis Localization}
+
+\paragraph{Theory: Axis Localization}
+Using $\matr{K}$, we localize the cylinder axis w.r.t. the camera. The cylinder axis is a 3D line parallel to the direction $\vect{n}$ (computed in the previous section) passing through the geometric center of the vault's cross-section.
+To localize it, we combine the pole-polar relationship in the image plane with 3D plane intersection.
+
+\begin{enumerate}
+    \item \textbf{Image Center Localization:} The center of the circular cross-section in the image plane, denoted as $\vect{x}_c$, corresponds to the \textit{pole} of the vanishing line $\ell'_\infty$ with respect to the fitted conic $\matr{C}$ (from Q3). 
+    \begin{equation}
+        \vect{x}_c = \matr{C}^{-1} \ell'_\infty
+    \end{equation}
+    This point represents the projection of the axis centers at infinity.
+    
+    \item \textbf{Back-projection:} We generate the viewing ray $\vect{r}_c$ passing through the camera center and the image center $\vect{x}_c$:
+    \begin{equation}
+        \vect{r}_c = \matr{K}^{-1} \vect{x}_c
+    \end{equation}
+    The physical 3D axis must intersect this ray.
+    
+    \item \textbf{3D Anchor Point:} To resolve the scale ambiguity (i.e., where along the ray $\vect{r}_c$ the axis is located), we define a reference plane $\pi_{ref}$ passing through one of the reconstructed points from Q5 (e.g., the point $\vect{a_5}$) and perpendicular to the axis direction $\vect{n}$. The plane equation is $\vect{n}^T (\vect{X} - \vect{a_5}) = 0$.
+    
+    \item \textbf{Intersection:} The 3D center point $\vect{C}_{3D}$ is found by intersecting the ray $\vect{r}_c$ with the plane $\pi_{ref}$. Substituting $\vect{X} = \lambda \vect{r}_c$ into the plane equation:
+    \begin{equation}
+        \lambda = \frac{\vect{n}^T \vect{a_5}}{\vect{n}^T \vect{r}_c} \implies \vect{C}_{3D} = \lambda \vect{r}_c
+    \end{equation}
+    
+    \item \textbf{Axis Equation:} The cylinder axis is finally described as the line passing through $\vect{C}_{3D}$ with direction $\vect{n}$:
+    \begin{equation}
+        \mathcal{L}_{axis}(t) = \vect{C}_{3D} + t \cdot \vect{n}
+    \end{equation}
+\end{enumerate}
+
+\paragraph{Matlab Results}
+We selected a random point of the arc of the previous point, so we already have its 3d coordinates:
+    \[
+    \vect{a_5} =  = \begin{bmatrix}
+        0.3954 \\
+        -0.2958 \\
+        4.1128
+    \end{bmatrix}
+    \]
+
+    \begin{equation}
+    \vect{C_{3D}} = 
+    \begin{bmatrix}
+        1.1086 \\
+        -0.1790 \\
+        2.4665
+    \end{bmatrix}
+\end{equation}
+\[\mathcal{L}_{axis}(t) = \begin{bmatrix}
+        1.1086 \\
+        -0.1790 \\
+        2.4665
+    \end{bmatrix} + t \cdot \begin{bmatrix}
+        0.8787 \\
+        0.2617 \\
+        0.3992
+    \end{bmatrix}\]
+
+\end{document}
